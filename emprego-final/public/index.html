@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="Emprego Moz — Encontre vagas de emprego em Moçambique. Ofertas verificadas em todo o país.">
+  <meta name="theme-color" content="#1D9E75">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Emprego Moz">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>Emprego Moz — Vagas em Moçambique</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/public/css/style.css">
+  <link rel="manifest" href="/public/manifest.json">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%231D9E75' width='180' height='180' rx='30'/><text x='90' y='120' font-size='90' text-anchor='middle' fill='white'>💼</text></svg>">
+</head>
+<body>
+<div class="app">
+
+  <!-- LOADING OVERLAY -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+  </div>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M20 6h-4V4c0-1.1-.9-2-2-2h-4c-1.1 0-2 .9-2 2v2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10-2h4v2h-4V4zm10 16H4v-2h16v2zm0-5H4V8h4v2h8V8h4v7z"/>
+        </svg>
+      </div>
+      <span class="logo-text">Emprego Moz</span>
+    </div>
+    <div class="header-right" id="headerRight">
+      <button class="btn-auth" onclick="openModal('loginModal')">Entrar</button>
+      <button class="btn-auth primary" onclick="openModal('signupModal')">Criar conta</button>
+    </div>
+  </div>
+
+  <!-- JOBS VIEW -->
+  <div id="jobsView">
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="Pesquisar vagas, empresas, cidades…" oninput="filterJobs()">
+      <button class="btn-search" onclick="filterJobs()">Pesquisar</button>
+    </div>
+    <div class="filters" id="filters"></div>
+    <div class="stats">
+      <div class="stat"><div class="stat-val" id="statTotal">12</div><div class="stat-lbl">Vagas ativas</div></div>
+      <div class="stat"><div class="stat-val">8</div><div class="stat-lbl">Cidades</div></div>
+      <div class="stat"><div class="stat-val">3</div><div class="stat-lbl">Novas hoje</div></div>
+    </div>
+    <div class="section-label">Vagas em destaque</div>
+    <div id="jobList"></div>
+    <div class="empty" id="emptyMsg">Nenhuma vaga encontrada. Tente outro termo de pesquisa.</div>
+    <div class="fab-wrap">
+      <button class="fab" onclick="handlePostJob()">+ Publicar vaga</button>
+    </div>
+  </div>
+
+  <!-- SAVED JOBS VIEW -->
+  <div id="savedView" style="display:none">
+    <div class="section-label" style="padding: 1rem 1rem 0.5rem">Vagas guardadas</div>
+    <div id="savedList"></div>
+    <div class="empty" id="emptySaved">Nenhuma vaga guardada. Toque em "Guardar" em qualquer vaga para a guardar.</div>
+  </div>
+
+  <!-- PROFILE VIEW -->
+  <div id="profileView" style="display:none" class="profile-panel">
+    <button class="btn-back" onclick="showView('jobs')">← Voltar às vagas</button>
+    <div class="profile-header">
+      <div class="profile-avatar" id="profileAvatar"></div>
+      <div>
+        <div class="profile-name" id="profileName"></div>
+        <div class="profile-email" id="profileEmail"></div>
+      </div>
+    </div>
+    <div class="cv-box">
+      <div class="cv-box-title">O seu CV</div>
+      <div class="cv-status" id="cvStatus">Ainda não carregou o CV</div>
+      <div class="cv-filename" id="cvFilename" style="display:none"></div>
+      <div class="cv-upload-area" onclick="document.getElementById('cvInput').click()">
+        <input type="file" id="cvInput" accept=".pdf,.doc,.docx" style="display:none" onchange="handleCVUpload(event)">
+        <div style="font-size:24px;margin-bottom:6px">📄</div>
+        <div style="font-size:13px;font-weight:500;color:var(--text1);margin-bottom:4px" id="cvUploadLabel">Carregar o seu CV</div>
+        <div class="cv-upload-hint">PDF, DOC ou DOCX · máx 5MB</div>
+      </div>
+    </div>
+    <div class="cv-box">
+      <div class="cv-box-title">Vagas candidatadas</div>
+      <div id="appliedList"></div>
+    </div>
+    <button class="btn-logout" onclick="handleLogout()">Terminar sessão</button>
+  </div>
+
+</div>
+
+<!-- MOBILE BOTTOM NAV -->
+<nav class="bottom-nav" id="bottomNav">
+  <button class="nav-item active" onclick="showView('jobs')" id="navJobs" aria-label="Vagas">
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 6h-4V4c0-1.1-.9-2-2-2h-4c-1.1 0-2 .9-2 2v2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10-2h4v2h-4V4zm10 16H4v-2h16v2zm0-5H4V8h4v2h8V8h4v7z"/></svg>
+    <span>Vagas</span>
+  </button>
+  <button class="nav-item" onclick="showView('saved')" id="navSaved" aria-label="Guardadas">
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2zm0 15l-5-2.18L7 18V5h10v13z"/></svg>
+    <span>Guardadas</span>
+  </button>
+  <button class="nav-item" onclick="showView('profile')" id="navProfile" aria-label="Perfil">
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+    <span>Perfil</span>
+  </button>
+</nav>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- LOGIN MODAL -->
+<div class="modal-bg" id="loginModal">
+  <div class="modal">
+    <div class="modal-title">Entrar no Emprego Moz</div>
+    <label>Endereço de email</label>
+    <input type="email" id="loginEmail" placeholder="exemplo@email.com">
+    <label>Palavra-passe</label>
+    <input type="password" id="loginPassword" placeholder="A sua palavra-passe" onkeydown="if(event.key==='Enter')doLogin()">
+    <div class="error-msg" id="loginError" style="display:none"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('loginModal')">Cancelar</button>
+      <button class="btn-submit" onclick="doLogin()">Entrar</button>
+    </div>
+    <div class="modal-switch">Não tem conta? <span onclick="switchModal('loginModal','signupModal')">Criar conta</span></div>
+  </div>
+</div>
+
+<!-- SIGNUP MODAL -->
+<div class="modal-bg" id="signupModal">
+  <div class="modal">
+    <div class="modal-title">Criar a sua conta</div>
+    <label>Nome completo</label>
+    <input type="text" id="signupName" placeholder="O seu nome completo">
+    <label>Endereço de email</label>
+    <input type="email" id="signupEmail" placeholder="exemplo@email.com">
+    <label>Palavra-passe</label>
+    <input type="password" id="signupPassword" placeholder="Mínimo 6 caracteres" onkeydown="if(event.key==='Enter')doSignup()">
+    <div class="error-msg" id="signupError" style="display:none"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('signupModal')">Cancelar</button>
+      <button class="btn-submit" onclick="doSignup()">Criar conta</button>
+    </div>
+    <div class="modal-switch">Já tem conta? <span onclick="switchModal('signupModal','loginModal')">Entrar</span></div>
+  </div>
+</div>
+
+<!-- POST JOB MODAL -->
+<div class="modal-bg" id="postJobModal">
+  <div class="modal">
+    <div class="modal-title">Publicar uma vaga</div>
+    <label>Título da vaga</label>
+    <input type="text" id="pjTitle" placeholder="Ex: Desenvolvedor Web">
+    <label>Empresa / Organização</label>
+    <input type="text" id="pjOrg" placeholder="Ex: Vodacom Mozambique">
+    <label>Cidade</label>
+    <select id="pjCity">
+      <option>Maputo</option><option>Beira</option><option>Nampula</option>
+      <option>Tete</option><option>Quelimane</option><option>Inhambane</option>
+      <option>Chimoio</option><option>Pemba</option>
+    </select>
+    <label>Setor</label>
+    <select id="pjSector">
+      <option>Tecnologia</option><option>Saúde</option><option>Educação</option>
+      <option>Finanças</option><option>Construção</option><option>ONG</option>
+    </select>
+    <label>Tipo de contrato</label>
+    <select id="pjTipo">
+      <option>Tempo inteiro</option><option>Meio período</option><option>Contrato</option>
+    </select>
+    <label>Salário (MZN/mês)</label>
+    <input type="text" id="pjSalary" placeholder="Ex: 50,000 – 80,000 MZN/mês">
+    <label>Descrição da vaga</label>
+    <textarea id="pjDesc" placeholder="Descreva as responsabilidades e requisitos…"></textarea>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('postJobModal')">Cancelar</button>
+      <button class="btn-submit" onclick="doPostJob()">Publicar vaga</button>
+    </div>
+  </div>
+</div>
+
+<!-- CV PROMPT MODAL -->
+<div class="modal-bg" id="cvPromptModal">
+  <div class="modal">
+    <div class="modal-title">Carregue o CV primeiro</div>
+    <p style="font-size:14px;color:var(--text2);line-height:1.7">
+      Carregue o CV para o seu perfil. Ele será automaticamente anexado a todas as suas candidaturas.
+    </p>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('cvPromptModal')">Agora não</button>
+      <button class="btn-submit" onclick="closeModal('cvPromptModal');showView('profile')">Ir para o meu perfil</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCRIPTS — order matters! -->
+<script src="/public/js/data.js"></script>
+<script src="/public/js/ui.js"></script>
+<script src="/public/js/auth.js"></script>
+<script src="/public/js/profile.js"></script>
+<script src="/public/js/jobs.js"></script>
+<script>
+  // Register service worker for PWA
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/public/sw.js')
+        .then(reg => console.log('SW registered:', reg.scope))
+        .catch(err => console.log('SW registration failed:', err));
+    });
+  }
+</script>
+</body>
+</html>
